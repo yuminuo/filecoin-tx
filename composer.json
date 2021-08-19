@@ -1,0 +1,24 @@
+{
+    "name": "adamyu1024/filecoin-tx",
+    "description": "Filecoin transaction library in PHP",
+    "type": "library",
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.4",
+        "skleeschulte/base32": "^0.0.2",
+        "simplito/elliptic-php": "^1.0",
+        "deemru/blake2b": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "adamyu1024\\FilecoinTx\\": "src"
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Adam Yu",
+            "email": "adamyxt@outlook.com"
+        }
+    ]
+}
