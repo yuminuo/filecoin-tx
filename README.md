@@ -15,8 +15,6 @@ Returns signed of transaction data.
 
 `sign(array $message, string $privateKey)`
 
-String privateKey - hexed private key with zero prefixed.
-
 ###### Example
 
 * Sign the transaction data.
