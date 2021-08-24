@@ -5,17 +5,18 @@ namespace adamyu1024\FilecoinTx;
 
 use deemru\Blake2b;
 use Elliptic\EC;
+use SKleeschulte\Base32;
 
 /**
  * FIL 签名类
- * Author:Ansel
- * Email:3126620990@qq.com
- * Web:https://www.95ansel.cc
+ * Author:Adam Yu
  */
 class Sign
 {
 
     protected $result = [];
+    private $messageId;
+    private $cid;
 
     /**
      * Sign constructor.
@@ -48,17 +49,47 @@ class Sign
         $this->_stringNumber($transaction['gasPremium']);
         $this->_number($transaction['method']);
         $this->_hash($transaction['params'] ? bin2hex(base64_decode($transaction['params'])) : "");
-        $signData = implode("", $this->result);
+        $unsignedMessage = implode("", $this->result);
         $blake2b = new Blake2b();
 
-        $hash = $blake2b->hash(hex2bin($signData));
+        $hash = $blake2b->hash(hex2bin($unsignedMessage));
         $cid = $blake2b->hash(hex2bin("0171a0e40220" . bin2hex($hash)));
         $ecc = new EC("secp256k1");
 
         $sign = $ecc->sign(bin2hex($cid), $privKey, ['canonical' => true]);
-        $signData = $sign->r->toString('hex') . $sign->s->toString('hex') . bin2hex(implode('', array_map('chr', [$sign->recoveryParam])));
+        $signature = $sign->r->toString('hex') . $sign->s->toString('hex') . bin2hex(implode('', array_map('chr', [$sign->recoveryParam])));
+        /**
+         * 计算messageID以及mpoolPush返回的CID
+         */
+        $unsignedMessageBytes = $this->toBytes($unsignedMessage);//将message转换为byte数组
+        $cid_bin = $blake2b->hash(hex2bin(strtolower($this->toStr($unsignedMessageBytes))));
+        $this->messageId = 'b' . strtolower(Base32::encodeByteStr(hex2bin("0171a0e40220" . strtolower(bin2hex($cid_bin))), true));
+        array_unshift($unsignedMessageBytes, 130);//将130添加进byte数组首位
+        array_push($unsignedMessageBytes, 88);//将88添加进byte数组末尾
+        $signatureBytes = $this->toBytes($signature);//将signature转换为byte数组
+        array_push($unsignedMessageBytes, count($signatureBytes) + 1);//将计算出来的数字添加进byte数组末尾
+        array_push($unsignedMessageBytes, 1);//将1添加进byte数组末尾
+        $mergeBytes = array_merge($unsignedMessageBytes, $signatureBytes);//合并两个byte数组
+        $push_hash = $blake2b->hash(hex2bin(strtolower($this->toStr($mergeBytes))));
+        $this->cid = 'b' . strtolower(Base32::encodeByteStr(hex2bin("0171a0e40220" . strtolower(bin2hex($push_hash))), true));
+        return base64_encode(hex2bin($signature));
+    }
 
-        return base64_encode(hex2bin($signData));
+    public function toBytes($string)
+    {
+        $bytes = array();
+        for ($i = 0; $i < strlen($string) / 2; $i++)
+            $bytes[$i] = hexdec($string[$i * 2] . $string[$i * 2 + 1]);
+        return $bytes;
+    }
+
+    public function toStr($bytes)
+    {
+        $str = "";
+        for ($i = 0; $i < count($bytes); $i++)
+            $str .= sprintf("%02X", $bytes[$i]);
+
+        return $str;
     }
 
     /**
@@ -155,6 +186,22 @@ class Sign
         } else {
             return "000" . $value;
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMessageId()
+    {
+        return $this->messageId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCid()
+    {
+        return $this->cid;
     }
 
 }

@@ -37,7 +37,10 @@ use adamyu1024\FilecoinTx\Sign;
         
         $sign = new Sign();
         $signData = $sign->sign($message,"ee2868ca9485673b36c38ba4f18551be25d08dd9be9bd24c44cd626b37cadae4");
-
+        //获取messageID
+        $message['cid'] = ['/' => $sign->getMessageId()];
+        //获取离线计算发送返回CID
+        $sign->getCid();
         $signMessageData = [
             'message'=>$message,
             'signature'=>[
