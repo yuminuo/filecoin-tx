@@ -62,7 +62,7 @@ class Sign
          * 计算messageID以及mpoolPush返回的CID
          */
         $unsignedMessageBytes = $this->toBytes($unsignedMessage);//将message转换为byte数组
-        $cid_bin = $blake2b->hash(hex2bin(strtolower($this->toStr($unsignedMessageBytes))));
+        $cid_bin = $blake2b->hash(hex2bin($unsignedMessage));
         $this->messageId = 'b' . strtolower(Base32::encodeByteStr(hex2bin("0171a0e40220" . strtolower(bin2hex($cid_bin))), true));
         array_unshift($unsignedMessageBytes, 130);//将130添加进byte数组首位
         array_push($unsignedMessageBytes, 88);//将88添加进byte数组末尾
