@@ -1,5 +1,5 @@
 # filecoin-tx
-Filecoin transaction library in PHP.
+Filecoin transaction library in PHP(Only for secp256k1).
 
 # Install
 
